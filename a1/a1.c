@@ -5,8 +5,11 @@
  * cis3150 - A1
  ****************************************/
 
+#define _POSIX_C_SOURCE 199309L
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
+#include <time.h>
 
 /* 
   9.[6 marks]Program in C. Write a simple recursive function (as outlined in class) 
@@ -19,6 +22,9 @@
 
 void binTree(char* str, int len, int n, int k, int m );
 
+int threads = 8;
+int threadsInUse = 1;
+
 int main(int argc, char* argv[]) 
 {
 	if (argc < 4) 
@@ -30,7 +36,18 @@ int main(int argc, char* argv[])
 
 	char str[n+1];
 	str[n]='\0';
+
+	struct timespec start, finish;
+	double elapsed;
+
+	clock_gettime(CLOCK_MONOTONIC, &start);
 	binTree(str, 0, n, k, m);
+	clock_gettime(CLOCK_MONOTONIC, &finish);
+
+    elapsed = (finish.tv_sec - start.tv_sec);
+    elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+
+	printf("time taken: %lf\n", elapsed);
 }
 
 void printBS(char* str, int len, int n) {
@@ -42,15 +59,16 @@ void printBS(char* str, int len, int n) {
 void binTree(char* str, int len, int n, int k, int m) 
 {
 	int sT=0,sK=0;
-	for (int i=0; i<len; i++)
-		if (str[i]=='1')
-			if (++sK<=k)
-				sT+=i+1;
-			else 
-				break;
+	if (len >= k)
+		for (int i=0; i<len; i++)
+			if (str[i]=='1')
+				if (++sK<=k)
+					sT+=i+1;
+				else 
+					break;
 	if(sK==k && sT==m)
 		printBS(str, len, n);
-	if (len == n || sK >= k)
+	if (len == n || sK >= k || (n-len)<(k-sK))
 		return;
 	str[len]='0';
 	binTree(str, len+1, n, k, m);
