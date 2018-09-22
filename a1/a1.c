@@ -8,7 +8,6 @@
 #define _POSIX_C_SOURCE 199309L
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <time.h>
 
 /* 
@@ -21,9 +20,6 @@
 */
 
 void binTree(char* str, int len, int n, int k, int m );
-
-int threads = 8;
-int threadsInUse = 1;
 
 int main(int argc, char* argv[]) 
 {
