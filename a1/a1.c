@@ -6,9 +6,11 @@
  ****************************************/
 
 #define _POSIX_C_SOURCE 199309L
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 /* 
   9.[6 marks]Program in C. Write a simple recursive function (as outlined in class) 
@@ -19,9 +21,21 @@
   and sums to m=8
 */
 
-void binTree(char* str, int len, int n, int k, int m, int sK);
+typedef struct data 
+{
+	char* str;
+	int len;
+	int n;
+	int k;
+	int m;
+	int sK;
+	int* matches;
+} BinData;
 
-int found = 0;
+int binTree(char* str, int len, int n, int k, int m, int sK);
+
+int threads = 16;
+int threadsInUse = 1;
 
 int main(int argc, char* argv[]) 
 {
@@ -39,14 +53,14 @@ int main(int argc, char* argv[])
 	double elapsed;
 
 	clock_gettime(CLOCK_MONOTONIC, &start);
-	binTree(str, 0, n, k, m, 0);
+	int found = binTree(str, 0, n, k, m, 0);
 	clock_gettime(CLOCK_MONOTONIC, &finish);
 
     elapsed = (finish.tv_sec - start.tv_sec);
     elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
 
 	printf("time taken: %lf\n", elapsed);
-	printf("matches found: %d", found);
+	printf("matches found: %d\n", found);
 }
 
 void printBS(char* str, int len, int n) {
@@ -55,20 +69,67 @@ void printBS(char* str, int len, int n) {
 	printf("%s\n", str);
 }
 
-void binTree(char* str, int len, int n, int k, int m, int sK) 
+//helper functions allowing threads to start solving sub sections of the tree
+void* threadBinStart(void* data) {
+	BinData* d = (BinData*)data;
+	*(d->matches) = binTree(d->str, d->len, d->n, d->k, d->m, d->sK);
+}
+
+int binTree(char* str, int len, int n, int k, int m, int sK) 
 {
 	int sT=0;
+	//if there are the correct amount of 1s checking the summation of the set
 	if (sK==k)
 		for (int i=0; i<len; i++)
 			if (str[i]=='1')
 					sT+=i+1;
-	if(sK==k && sT==m)
+	//check if its the correct summation
+	if(sK==k && sT==m) 
+	{
 		//printBS(str, len, n);
-		found++;
+		return 1;
+	}
 	if (len == n || sK >= k || (n-len)<(k-sK))
-		return;
-	str[len]='0';
-	binTree(str, len+1, n, k, m, sK);
+		return 0;
+	
+	pthread_t thread;
+	char str2[n+1];
+	int flag = 0;
+	int matches = 0;
+	int threadMatches = 0;
+	//if there is an extra thread available divide the work
+	if (threadsInUse < threads) 
+	{
+		BinData data;
+		strcpy(str2, str);
+		str2[len]='0';
+		data.str = str2;
+		data.len = len+1;
+		data.n = n;
+		data.k = k;
+		data.m = m;
+		data.sK = sK;
+		data.matches = &threadMatches;
+		if(!pthread_create(&thread, NULL, threadBinStart, &data))
+		{
+			threadsInUse++;
+			flag = 1;
+		}
+	} 
+	else
+	{
+		str[len]='0';
+		matches += binTree(str, len+1, n, k, m, sK);
+	}
+	//solve the other side of the tree
 	str[len]='1';
-	binTree(str, len+1, n, k, m, sK+1);
+	matches += binTree(str, len+1, n, k, m, sK+1);
+	if (flag) 
+	{
+		pthread_join(thread, NULL);
+		matches += threadMatches;
+		threadsInUse--;
+	}
+	return matches;
 }
+

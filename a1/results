@@ -1,0 +1,11 @@
+a) 20 8 80
+    Time taken: 0.015157
+    Subsets found: 3627
+
+b) 30 15 200
+    Time taken: 4.343208
+    Subsets found: 1059414
+
+c) 35 17 200
+    Time taken: 101.673236
+    Subsets found: 84254
