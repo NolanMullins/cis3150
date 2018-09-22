@@ -19,7 +19,9 @@
   and sums to m=8
 */
 
-void binTree(char* str, int len, int n, int k, int m );
+void binTree(char* str, int len, int n, int k, int m, int sK);
+
+int found = 0;
 
 int main(int argc, char* argv[]) 
 {
@@ -37,13 +39,14 @@ int main(int argc, char* argv[])
 	double elapsed;
 
 	clock_gettime(CLOCK_MONOTONIC, &start);
-	binTree(str, 0, n, k, m);
+	binTree(str, 0, n, k, m, 0);
 	clock_gettime(CLOCK_MONOTONIC, &finish);
 
     elapsed = (finish.tv_sec - start.tv_sec);
     elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
 
 	printf("time taken: %lf\n", elapsed);
+	printf("matches found: %d", found);
 }
 
 void printBS(char* str, int len, int n) {
@@ -52,22 +55,20 @@ void printBS(char* str, int len, int n) {
 	printf("%s\n", str);
 }
 
-void binTree(char* str, int len, int n, int k, int m) 
+void binTree(char* str, int len, int n, int k, int m, int sK) 
 {
-	int sT=0,sK=0;
-	if (len >= k)
+	int sT=0;
+	if (sK==k)
 		for (int i=0; i<len; i++)
 			if (str[i]=='1')
-				if (++sK<=k)
 					sT+=i+1;
-				else 
-					break;
 	if(sK==k && sT==m)
-		printBS(str, len, n);
+		//printBS(str, len, n);
+		found++;
 	if (len == n || sK >= k || (n-len)<(k-sK))
 		return;
 	str[len]='0';
-	binTree(str, len+1, n, k, m);
+	binTree(str, len+1, n, k, m, sK);
 	str[len]='1';
-	binTree(str, len+1, n, k, m);
+	binTree(str, len+1, n, k, m, sK+1);
 }
