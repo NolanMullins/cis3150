@@ -164,11 +164,13 @@ int binTree(int* bin, int len, int size, int ones, int max, int **m)
 		return 0;
 
 	int matches = 0;
-	bin[len] = 1;
-	if ((matches=binTree(bin, len + 1, size, ones + 1, max, m))==1)
-		return 1;
 	bin[len] = 0;
 	if((matches=binTree(bin, len + 1, size, ones, max, m))==1)
 		return 1;
+	
+	bin[len] = 1;
+	if ((matches=binTree(bin, len + 1, size, ones + 1, max, m))==1)
+		return 1;
+
 	return matches;
 }
