@@ -12,8 +12,7 @@
 #include <string.h>
 #include <time.h>
 
-#define display 1 
-//typedef int (*fptr)(int* bin, int len, int n, int ones);
+#define display 0 
 
 int binTree(int* bin, int len, int size, int ones, int max, int **m, int* sets);
 void printBS(int* bin, int len, int n);
@@ -109,12 +108,12 @@ int main(int argc, char *argv[])
 	{
 		printf("(%c) ", 'a'+i);
 		if (sets[i])
-			printf(" yes\t");
+			printf("yes\t");
 		else
-			printf(" no\t");
+			printf("no\t");
 	}
 	printf("\n");
-	printf("Completed in %.5lfs\n", elapsed);
+	printf("Completed in %lfs\n", elapsed);
 
 	for (int a = 0; a < n; a++)
 		free(matrix[a]);
@@ -159,6 +158,8 @@ int isClique(int* bin, int len, int size, int** m)
 	{
 		if (a >= len || bin[a] == 0)
 			continue;
+		if (e[a] == 1)
+			return 0;
 		for (int b = 0; b < size; b++)
 		{
 			if (b >= len || bin[b] == 0 || a==b)
@@ -173,12 +174,34 @@ int isClique(int* bin, int len, int size, int** m)
 
 int isIndependent(int* bin, int len, int size, int** m)
 {
-	return 0;
+	for (int a = 0; a < size; a++)
+	{
+		if (a >= len || bin[a] == 0 || e[a] == 1)
+			continue;
+		for (int b = 0; b < size; b++)
+		{
+			if (b >= len || bin[b] == 0 || a==b)
+				continue;
+			//check if 2 verticies are connected
+			if (m[a][b] != 0)
+				return 0;
+		}
+	}
+	return 1;
 }
 
 int isVertexCover(int* bin, int len, int size, int** m)
 {
-	return 0;
+	for (int a = 1; a < size; a++)
+	{
+		if (a < len && bin[a] == 1 || e[a] == 1)
+			continue;
+		for (int b = 0; b < a; b++)
+			if (m[a][b] == 1)
+				if ((a >= len ||bin[a] == 0) && (b >= len || bin[b] == 0))
+					return 0;
+	}
+	return 1;
 }
 
 void printBS(int* bin, int len, int n)
@@ -214,7 +237,7 @@ int binTree(int* bin, int len, int size, int ones, int max, int **m, int* sets)
 			if (sets[i] == 0)
 			{
 				sets[i] = (*func[i])(bin, len, size, m);
-				if (sets[i] == 1)
+				if (display && sets[i] == 1)
 					printSet(bin, len, size, ones, i);
 			}
 
