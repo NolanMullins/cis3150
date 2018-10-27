@@ -5,14 +5,25 @@
  * cis3150 - A2
  ****************************************/
 
+#define _POSIX_C_SOURCE 199309L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-#define display 0 
+#define display 1 
+//typedef int (*fptr)(int* bin, int len, int n, int ones);
 
-int binTree(int* bin, int len, int size, int ones, int max, int **m);
+int binTree(int* bin, int len, int size, int ones, int max, int **m, int* sets);
+void printBS(int* bin, int len, int n);
+
+int isDomSet(int* bin, int len, int size, int** m);
+int isClique(int* bin, int len, int size, int** m);
+int isIndependent(int* bin, int len, int size, int** m);
+int isVertexCover(int* bin, int len, int size, int** m);
+
+int (*func[4])(int* bin, int len, int size, int** m) = {isDomSet, isClique, isIndependent, isVertexCover};
 
 void error(char *msg)
 {
@@ -28,7 +39,7 @@ int main(int argc, char *argv[])
 		error("Need filename");
 	FILE *f;
 	if ((f = fopen(argv[1], "r")) == NULL)
-		return -1;
+		error("Could not open file");
 
 	int n, m, k;
 	fscanf(f, "%d %d %d", &n, &m, &k);
@@ -54,6 +65,10 @@ int main(int argc, char *argv[])
 				printf("%d ", matrix[a][b]);
 			printf("\n");
 		}
+	
+	//Dominating, independent, clique, cover
+	int sets[4];
+	memset(sets, 0, sizeof(int)*4);
 
 	int bin[n];
 	e = malloc(n*sizeof(int));
@@ -76,17 +91,30 @@ int main(int argc, char *argv[])
 		if (e[a]==1)
 			numEmpty++;
 	}
-	int sets = 0;
-	if (numEmpty < k || k == n)
-		sets = binTree(bin, 0, n, 0, k, matrix);
+
+	if (numEmpty > k)
+	{
+		sets[0] = -1;
+		sets[2] = -1;
+	}
+
+	binTree(bin, 0, n, 0, k, matrix, sets);
 	clock_gettime(CLOCK_MONOTONIC, &finish);
 
 	elapsed = (finish.tv_sec - start.tv_sec);
 	elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
 
-	if (sets==0)
-		printf("No dominating set of size k=%d:    ", k);
-	printf("%lf seconds\n", elapsed);
+	//printf("No dominating set of size k=%d:    ", k);
+	for (int i = 0; i < 4; i++)
+	{
+		printf("(%c) ", 'a'+i);
+		if (sets[i])
+			printf(" yes\t");
+		else
+			printf(" no\t");
+	}
+	printf("\n");
+	printf("Completed in %.5lfs\n", elapsed);
 
 	for (int a = 0; a < n; a++)
 		free(matrix[a]);
@@ -125,6 +153,34 @@ int isDomSet(int* bin, int len, int size, int **m)
 	return 1;
 }
 
+int isClique(int* bin, int len, int size, int** m)
+{
+	for (int a = 0; a < size; a++)
+	{
+		if (a >= len || bin[a] == 0)
+			continue;
+		for (int b = 0; b < size; b++)
+		{
+			if (b >= len || bin[b] == 0 || a==b)
+				continue;
+			//check if 2 verticies are connected
+			if (m[a][b] != 1)
+				return 0;
+		}
+	}
+	return 1;
+}
+
+int isIndependent(int* bin, int len, int size, int** m)
+{
+	return 0;
+}
+
+int isVertexCover(int* bin, int len, int size, int** m)
+{
+	return 0;
+}
+
 void printBS(int* bin, int len, int n)
 {
 	for (int i = 0; i < len; i++)
@@ -134,42 +190,42 @@ void printBS(int* bin, int len, int n)
 	printf("\n");
 }
 
-void printSet(int* bin, int len, int n, int ones)
+void printSet(int* bin, int len, int n, int ones, int type)
 {
-	printf("Dominating set of size k=%d {", ones);
+	printf("(%c) size k=%d {", 'a'+type ,ones);
 	int a = 0;
 	while(a < len)
 		if (bin[a++]==1)
 		{
-			printf("%d",a);
+			printf("%d",a-1);
 			break;
 		}
 	for (a; a < len; a++)
 		if (bin[a]==1)
-			printf(",%d",a+1);
-	printf("}:    ");
+			printf(",%d",a);
+	printf("}\n");
 }
 
-int binTree(int* bin, int len, int size, int ones, int max, int **m)
+int binTree(int* bin, int len, int size, int ones, int max, int **m, int* sets)
 {
 	//if there are the correct amount of 1s check for dom set
 	if (max == ones)
-		if (isDomSet(bin, len, size, m))
-		{
-			printSet(bin, len, size, ones);
-			return 1;
-		}
+		for (int i = 0; i < 4; i++)
+			if (sets[i] == 0)
+			{
+				sets[i] = (*func[i])(bin, len, size, m);
+				if (sets[i] == 1)
+					printSet(bin, len, size, ones, i);
+			}
 
 	if (len == size || ones >= max || (size - len) < (max - ones))
 		return 0;
 
-	int matches = 0;
-	
 	bin[len] = 0;
-	if((matches=binTree(bin, len + 1, size, ones, max, m))==1)
+	if(binTree(bin, len + 1, size, ones, max, m, sets))
 		return 1;
 	bin[len] = 1;
-	if ((matches=binTree(bin, len + 1, size, ones + 1, max, m))==1)
+	if (binTree(bin, len + 1, size, ones + 1, max, m, sets))
 		return 1;
-	return matches;
+	return 0;
 }
