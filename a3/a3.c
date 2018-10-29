@@ -1,8 +1,8 @@
 /****************************************
  * Nolan Mullins
  * 0939720
- * 2018-10-07
- * cis3150 - A2
+ * 2018-10-29
+ * cis3150 - A3
  ****************************************/
 
 #define _POSIX_C_SOURCE 199309L
@@ -103,7 +103,8 @@ int main(int argc, char *argv[])
 	elapsed = (finish.tv_sec - start.tv_sec);
 	elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
 
-	//printf("No dominating set of size k=%d:    ", k);
+	printf("%s\n", argv[1]);
+
 	for (int i = 0; i < 4; i++)
 	{
 		printf("(%c) ", 'a'+i);
