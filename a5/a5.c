@@ -1,8 +1,8 @@
 /****************************************
  * Nolan Mullins
  * 0939720
- * 2018-10-29
- * cis3150 - A3
+ * 2018-11-25
+ * cis3150 - A5
  ****************************************/
 
 #include <stdio.h>
@@ -19,13 +19,14 @@ void printBS(int* bin, int len, int n);
 void printSet(int* bin, int len, int n);
 
 int* arr;
-int tmp2[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-int tmp3[] = {7,9,11,15,24,72,90,107,125};
-int tmp[] = {1, 2, 3, 4};
+int tmp1[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+int tmp[] = {7,9,11,15,24,72,90,107,125};
+int tmp4[] = {1, 2, 3, 4};
 
 int main(int argc, char* argv[])
 {
 	int size, matches = 0;
+    //random or hardcoded
 	if (argc > 1)
 	{
 		size = atoi(argv[1]);
@@ -36,15 +37,14 @@ int main(int argc, char* argv[])
 			arr[a] = rand() % size + 1;
 	}
 	else {
-		size = 4;
+		size = 9;
 		arr = malloc(sizeof(int)*size);
 		for (int a = 0; a < size; a++)
 			arr[a] = tmp[a];
 	}
 	int* bin = malloc(sizeof(int)*size);
 	memset(bin, 0, sizeof(bin));
-	//if (display)
-		//printSet(bin, size, size);
+	
 	//Timing
 	struct timeval  start, finish;
     double elapsed;
@@ -112,11 +112,9 @@ void printSet(int* bin, int len, int n)
 
 int binTree(int* bin, int len, int size, int ones)
 {
-	//if there are the correct amount of 1s check for dom set
 	int test = isSumSet(bin, len, size);
 	if (test == 1)
 	{
-		//printBS(bin, len, size);
 		if (display)
 		{
 			printBS(bin, len, size);
